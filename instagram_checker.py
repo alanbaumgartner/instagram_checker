@@ -6,7 +6,7 @@ class checker:
         #Declare some variables
         self.headers = {'User-agent': 'Mozilla/5.0'}
         self.loginurl = 'https://www.instagram.com/accounts/login/ajax/'
-        self.url = 'https://www.instagram.com/'
+        self.url = 'https://www.instagram.com/{}'
 
         #Start a session and update headers
         self.s = requests.session()
@@ -33,14 +33,15 @@ class checker:
 
     def login(self, username, password):
         #Logs into instagram
+        url = self.url.format('')
         loginRequest = self.s.post(
                 self.loginurl,
                     headers={
-                        'x-csrftoken': self.s.get(self.url).text.split('csrf_token": "')[1].split('"')[0],
+                        'x-csrftoken': self.s.get(url).text.split('csrf_token": "')[1].split('"')[0],
                         'x-instagram-ajax':'1',
                         'x-requested-with': 'XMLHttpRequest',
-                        'Origin': self.url,
-                        'Referer': self.url,
+                        'Origin': url,
+                        'Referer': url,
                     },
                     data={
                         'username':username,
@@ -61,13 +62,19 @@ class checker:
 
     def check_usernames(self, username, output):
         #checks username and saves available usernames to new file
+        count = 0
+        total = len(username)
         for user in usernames:
-            r = self.s.get(self.url+user)
+            url = self.url.format(user)
+            r = self.s.get(url)
             al = r.text
             text = al[al.find('<title>') + 7 :al.find('</title>')]
+            count+=1
             if "Page Not Found" in text:
                 with open(output, "a") as a:
                     a.write(user+'\n')
+            if count % 10 == 0:
+                print('Checked',count,'of',total)
 
 if __name__ == "__main__":
     check = checker()
