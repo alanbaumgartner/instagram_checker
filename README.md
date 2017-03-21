@@ -1,6 +1,6 @@
 ## Synopsis
 
-This program checks instagram usernames without the official API filtering out banned usernames.
+This program checks Instagram usernames without the official API filtering out banned usernames. It requires you to be logged into an Instagram account because without logging in there is no differentiation in user profiles.
 
 ## Usage
 
