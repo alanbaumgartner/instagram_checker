@@ -1,4 +1,11 @@
-Usage
+## Synopsis
 
-instagram_checker.py -u username -p password -i file_to_check -o file_to_save_to
+This program checks instagram usernames without the official API filtering out banned usernames.
 
+## Usage
+
+instagram_checker.py -u 'instagram_username' -p 'instagram_password' -i 'text_file_with_usernames' -o 'file_to_save_usernames_to'
+
+## License
+
+MIT license
