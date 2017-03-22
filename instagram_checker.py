@@ -1,17 +1,7 @@
-import requests, argparse, sys
+import argparse, sys, asyncio, aiohttp, time
 
 class checker:
     def __init__(self):
-
-        #Declare some variables
-        self.headers = {'User-agent': 'Mozilla/5.0'}
-        self.loginurl = 'https://www.instagram.com/accounts/login/ajax/'
-        self.url = 'https://www.instagram.com/{}'
-
-        #Start a session and update headers
-        self.s = requests.session()
-        self.s.headers.update(self.headers)
-
 
         #Gets username, password, textfile to check usernames, and output file for available usernames.
         parser = argparse.ArgumentParser()
@@ -31,13 +21,22 @@ class checker:
         self.inputf = args.inputf
         self.outputf = args.outputf
 
-    def login(self, username, password):
+        self.loginurl = 'https://www.instagram.com/accounts/login/ajax/'
+        self.url = 'https://www.instagram.com/{}'
+
+    async def login(self, session, username, password):
         #Logs into instagram
         url = self.url.format('')
-        loginRequest = self.s.post(
+
+        async with session.get(url) as response:
+            csrftoken = await response.text()
+
+        csrftoken = csrftoken.split('csrf_token": "')[1].split('"')[0]
+
+        async with session.post(
                 self.loginurl,
                     headers={
-                        'x-csrftoken': self.s.get(url).text.split('csrf_token": "')[1].split('"')[0],
+                        'x-csrftoken': csrftoken,
                         'x-instagram-ajax':'1',
                         'x-requested-with': 'XMLHttpRequest',
                         'Origin': url,
@@ -47,42 +46,62 @@ class checker:
                         'username':username,
                         'password':password,
                     }
-                )
-            
-        if loginRequest.json()['authenticated']:
-            print('Logged In.')
-        else:
-            sys.exit("Login Failed, closing program.")
+                ) as response:
 
-    def get_usernames(self, filename):
+                text = await response.json()
+                if 'authenticated' in text:
+                    print('Logged In.')
+                else:
+                    print(text)
+                    sys.exit("Login Failed, closing program.")
+        
+    def get_usernames(self, input):
         #Gets username from file
-        with open(filename, "r") as f:
+        with open(input, "r") as f:
             usernames = f.read().split("\n")
             return usernames
 
-    def check_usernames(self, username, output):
+    def save_username(self, username, output):
         #checks username and saves available usernames to new file
-        count = 0
-        total = len(username)
-        for user in usernames:
-            url = self.url.format(user)
-            r = self.s.get(url)
-            al = r.text
-            text = al[al.find('<title>') + 7 :al.find('</title>')]
-            count+=1
+        with open(output, "a") as a:
+            a.write(user+'\n')
+
+    async def check_username(self, session, username):
+        #checks username and saves available usernames to new file
+        async with session.get(self.url.format(username)) as response:
+            text = await response.text()
+            text = text[text.find('<title>') + 7 :text.find('</title>')]
             if "Page Not Found" in text:
-                with open(output, "a") as a:
-                    a.write(user+'\n')
-            if count % 10 == 0:
-                print('Checked',count,'of',total)
+                return self.save_username(username, self.outputf)
+
+    async def setup_usernames(self, session, usernames):
+        #Sets up tasks to check usernames
+        count = 0
+        total = len(usernames)
+        for username in usernames:
+            count += 1
+            await asyncio.ensure_future(self.check_username(session, username))
+            if count % 25 == 0:
+                print('Tested', count, 'of', total)
+
+    async def main(self, session, loop):
+        await self.login(session, self.username, self.password)
+        usernames = self.get_usernames(self.inputf)
+        await self.setup_usernames(session, usernames)
 
 if __name__ == "__main__":
     check = checker()
-    check.login(check.username, check.password)
 
     #Clears output file for new usernames
     with open(check.outputf, "w") as a:
         print('Output file cleared.')
-        
-    usernames = check.get_usernames(check.inputf)
-    check.check_usernames(usernames, check.outputf)
+
+    loop = asyncio.get_event_loop()
+
+    session = aiohttp.ClientSession(loop=loop)
+
+    tasks = [
+        asyncio.ensure_future(check.main(session, loop))
+    ]
+
+    loop.run_until_complete(asyncio.wait(tasks))
