@@ -1,10 +1,10 @@
 ## Synopsis
 
-This program checks Instagram usernames without the official API filtering out banned usernames. It requires you to be logged into an Instagram account because without logging in there is no differentiation in user profiles.
+This program checks Instagram usernames without the official API filtering out banned usernames. It requires you to log into an Instagram account because there is no differentiation in user profiles when logged out.
 
 ## Usage
 ```
-instagram_checker.py -u 'instagram_username' -p 'instagram_password' -i 'text_file_with_usernames' -o 'file_to_save_usernames_to'
+instagram_checker.py -u 'username' -p 'password' -i 'usernames.txt' -o 'output.txt'
 ```
 ## License
 
