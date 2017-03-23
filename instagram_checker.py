@@ -7,13 +7,13 @@ async def check_usernames(url, igname, igpass, username, sem, session, loop=None
             url = url.format(username)
             async with session.get(url) as resp:
                 text = await resp.text()
-                text = text[text.find('<title>') + 7 :text.find('</title>')]
+                #text = text[text.find('<title>') + 7 :text.find('</title>')]
                 if "Page Not Found" in text:
                     save_username(username, outputfile)
         except Exception as e:
             print(e)
 
-async def start_check(url, igname, igpass, usernames, conns=20, loop=None):
+async def start_check(url, igname, igpass, usernames, conns=50, loop=None):
     sem = asyncio.BoundedSemaphore(conns)
     async with aiohttp.ClientSession(loop=loop) as session:
         await login(url, igname, igpass, session)
@@ -70,7 +70,6 @@ def main(url, igname, igpass):
     finally:
         loop.close()
 
-
 if __name__ == "__main__":
 
     #Gets values from command line
@@ -94,6 +93,10 @@ if __name__ == "__main__":
     #Default URL variables
     loginurl = 'https://www.instagram.com/accounts/login/ajax/'
     url = 'https://www.instagram.com/{}'
+
+    #Clears output file for new usernames
+    with open(outputfile, "w") as a:
+        print('Output file cleared.')
 
     #Runs program
     main(url, username, password)
