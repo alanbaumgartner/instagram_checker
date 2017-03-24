@@ -1,20 +1,21 @@
-import aiohttp, asyncio, argparse, re
+import aiohttp, asyncio, argparse
 
 def get_usernames(inputfile):
+    #Gets usernames to check from a file
     with open(inputfile, "r") as f:
         usernames = f.read().split("\n")
         return usernames
 
 def save_username(username, outputfile):
+    #Saves available usernames
     with open(outputfile, "a") as a:
         a.write(username+'\n')
 
 async def check_usernames(igname, igpass, username, sem, session, loop=None):
+    #Checks username availability
     async with sem:
         try:
-            url = 'https://www.instagram.com/{}'
-            url = url.format(username)
-            async with session.get(url) as resp:
+            async with session.get(URL.format(username)) as resp:
                 text = await resp.text()
                 if "Page Not Found" in text:
                     save_username(username, outputfile)
@@ -22,6 +23,7 @@ async def check_usernames(igname, igpass, username, sem, session, loop=None):
             print(Exception)
 
 async def start_check(igname, igpass, conns=50, loop=None):
+    #Packs all usernames into a tasklist
     sem = asyncio.BoundedSemaphore(conns)
     async with aiohttp.ClientSession(loop=loop) as session:
         await login(igname, igpass, session)
@@ -30,26 +32,23 @@ async def start_check(igname, igpass, conns=50, loop=None):
         await asyncio.gather(*tasks)
 
 async def login(username, password, session):
-    loginurl = 'https://www.instagram.com/accounts/login/ajax/'
-    url = 'https://www.instagram.com/'
+    #Logs into Instagram
+    loginurl = 'https://www.instagram.com/accounts/login/ajax/'; url = 'https://www.instagram.com/'
 
     async with session.get(url) as response:
         csrftoken = await response.text()
-        
+
     csrftoken = csrftoken.split('csrf_token": "')[1].split('"')[0]
 
     async with session.post(
             loginurl,
                 headers={
-                    'x-csrftoken': csrftoken,
-                    'x-instagram-ajax':'1',
+                    'x-csrftoken': csrftoken, 'x-instagram-ajax':'1',
                     'x-requested-with': 'XMLHttpRequest',
-                    'Origin': url,
-                    'Referer': url,
-                },
+                    'Origin': url, 'Referer': url
+                    },
                 data={
-                    'username':username,
-                    'password':password,
+                    'username':username, 'password':password
                 }
             ) as response:
 
@@ -57,9 +56,10 @@ async def login(username, password, session):
             if 'authenticated' in text:
                 pass
             else:
-                print(text)
+                sys.exit(text)
 
 def main(igname, igpass):
+    #Starts the loop
     loop = asyncio.get_event_loop()
     try:
         loop.run_until_complete(start_check(igname, igpass))
@@ -67,21 +67,22 @@ def main(igname, igpass):
         loop.close()
 
 if __name__ == "__main__":
+    #Command line parser
     parser = argparse.ArgumentParser()
-
-    parser.add_argument("-u", dest='username', action="store")
-    parser.add_argument("-p", dest='password', action="store")
-    parser.add_argument("-i", dest='inputfile', action="store")
-    parser.add_argument("-o", dest='outputfile', action="store")
-
+    parser.add_argument("-u", dest='username', action="store"); parser.add_argument("-p", dest='password', action="store")
+    parser.add_argument("-i", dest='inputfile', action="store"); parser.add_argument("-o", dest='outputfile', action="store")
     args = parser.parse_args()
 
-    igname = args.username
-    igpass = args.password
-    inputfile = args.inputfile
-    outputfile = args.outputfile
+    #Assign command line values to variables
+    igname = args.username; igpass = args.password; inputfile = args.inputfile; outputfile = args.outputfile
 
+    #Global constants
+    LOGIN_URL = 'https://www.instagram.com/accounts/login/ajax/'
+    URL = 'https://www.instagram.com/{}'
+
+    #Clears output files
     with open(outputfile, "w") as a:
         print('Output file cleared.')
     
+    #Starts downloading
     main(igname, igpass)
