@@ -1,17 +1,20 @@
-import aiohttp, asyncio, argparse
+import aiohttp, asyncio, argparse, os, sys
 
 def get_usernames(inputfile):
     #Gets usernames to check from a file
-    with open(inputfile, "r") as f:
-        usernames = f.read().split("\n")
-        return usernames
+    try:
+        with open(inputfile, "r") as f:
+            usernames = f.read().split("\n")
+            return usernames
+    except:
+        sys.exit(str(inputfile) + ' does not exists')
 
 def save_username(username, outputfile):
     #Saves available usernames
     with open(outputfile, "a") as a:
         a.write(username+'\n')
 
-async def check_usernames(igname, igpass, username, sem, session, loop=None):
+async def check_usernames(username, sem, session, loop=None):
     #Checks username availability
     async with sem:
         try:
@@ -28,24 +31,22 @@ async def start_check(igname, igpass, conns=50, loop=None):
     async with aiohttp.ClientSession(loop=loop) as session:
         await login(igname, igpass, session)
         usernames = get_usernames(inputfile)
-        tasks = [check_usernames(igname, igpass, username, sem, session, loop=loop) for username in usernames]
+        tasks = [check_usernames(username, sem, session, loop=loop) for username in usernames]
         await asyncio.gather(*tasks)
 
 async def login(username, password, session):
     #Logs into Instagram
-    loginurl = 'https://www.instagram.com/accounts/login/ajax/'; url = 'https://www.instagram.com/'
-
-    async with session.get(url) as response:
+    async with session.get(URL.format('')) as response:
         csrftoken = await response.text()
 
     csrftoken = csrftoken.split('csrf_token": "')[1].split('"')[0]
 
     async with session.post(
-            loginurl,
+            LOGIN_URL,
                 headers={
                     'x-csrftoken': csrftoken, 'x-instagram-ajax':'1',
                     'x-requested-with': 'XMLHttpRequest',
-                    'Origin': url, 'Referer': url
+                    'Origin': URL, 'Referer': URL
                     },
                 data={
                     'username':username, 'password':password
@@ -80,9 +81,10 @@ if __name__ == "__main__":
     LOGIN_URL = 'https://www.instagram.com/accounts/login/ajax/'
     URL = 'https://www.instagram.com/{}'
 
-    #Clears output files
-    with open(outputfile, "w") as a:
-        print('Output file cleared.')
-    
+    if os.path.exists(outputfile):
+        #Clears output files
+        with open(outputfile, "w") as a:
+            print('Output file cleared.')
+
     #Starts downloading
     main(igname, igpass)
