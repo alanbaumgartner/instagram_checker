@@ -70,12 +70,17 @@ def main(igname, igpass):
 if __name__ == "__main__":
     #Command line parser
     parser = argparse.ArgumentParser()
-    parser.add_argument("-u", dest='username', action="store"); parser.add_argument("-p", dest='password', action="store")
-    parser.add_argument("-i", dest='inputfile', action="store"); parser.add_argument("-o", dest='outputfile', action="store")
+    parser.add_argument("-u", dest='username', action="store")
+    parser.add_argument("-p", dest='password', action="store")
+    parser.add_argument("-i", dest='inputfile', action="store")
+    parser.add_argument("-o", dest='outputfile', action="store")
     args = parser.parse_args()
 
     #Assign command line values to variables
-    igname = args.username; igpass = args.password; inputfile = args.inputfile; outputfile = args.outputfile
+    igname = args.username
+    igpass = args.password
+    inputfile = args.inputfile
+    outputfile = args.outputfile
 
     #Global constants
     LOGIN_URL = 'https://www.instagram.com/accounts/login/ajax/'
