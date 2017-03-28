@@ -1,5 +1,7 @@
 import aiohttp, asyncio, argparse, os, sys
 
+__author__ = "Alan Baumgartner"
+
 def get_usernames(inputfile):
     #Gets usernames to check from a file
     try:
