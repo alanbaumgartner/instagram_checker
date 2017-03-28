@@ -93,5 +93,5 @@ if __name__ == "__main__":
         with open(outputfile, "w") as a:
             print('Output file cleared.')
 
-    #Starts downloading
+    #Starts check
     main(igname, igpass)
