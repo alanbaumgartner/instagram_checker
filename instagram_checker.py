@@ -34,7 +34,7 @@ class LoginDialog(QDialog):
         layout.addWidget(buttons, 2, 0, 3, 0)
 
         self.setLayout(layout)
-        self.setGeometry(400, 400, 200, 60)
+        self.setGeometry(400, 400, 300, 60)
 
     @staticmethod
     def getLoginInfo():
@@ -66,7 +66,7 @@ class ImportDialog(QDialog):
         layout.addWidget(buttons, 1, 0, 2, 0)
 
         self.setLayout(layout)
-        self.setGeometry(400, 400, 200, 60)
+        self.setGeometry(400, 400, 300, 60)
 
     @staticmethod
     def getFileInfo():
@@ -98,7 +98,7 @@ class ExportDialog(QDialog):
         layout.addWidget(buttons, 1, 0, 2, 0)
 
         self.setLayout(layout)
-        self.setGeometry(400, 400, 200, 60)
+        self.setGeometry(400, 400, 300, 60)
 
     @staticmethod
     def getFileInfo():
@@ -152,7 +152,6 @@ class Checker(QThread):
         sem = asyncio.BoundedSemaphore(50)
         lock = asyncio.Lock()
         async with aiohttp.ClientSession() as session:
-            #if loginbool 
             await self.login(self.igname, self.igpass, session)
             usernames = get_usernames()
             tasks = [self.check_usernames(username, sem, session, lock) for username in usernames]
