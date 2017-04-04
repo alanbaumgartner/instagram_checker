@@ -4,10 +4,11 @@ from PyQt5.QtCore import *
 
 __author__ = 'Alan Baumgartner'
 
-class Login(QDialog):
+class LoginDialog(QDialog):
     def __init__(self):
         super().__init__()
         self.setWindowModality(Qt.ApplicationModal)
+        self.setWindowFlags(self.windowFlags() ^ Qt.WindowContextHelpButtonHint)
         self.setWindowTitle('Login to Instagram')
         layout = QGridLayout()
 
@@ -15,6 +16,14 @@ class Login(QDialog):
         self.password_label = QLabel('Password')
         self.username_text = QLineEdit()
         self.password_text = QLineEdit()
+
+        buttons = QDialogButtonBox(
+            QDialogButtonBox.Ok | QDialogButtonBox.Cancel,
+            Qt.Horizontal, self)
+
+        buttons.accepted.connect(self.accept)
+        buttons.rejected.connect(self.reject)
+
         self.password_text.setEchoMode(2)
 
         layout.addWidget(self.username_label, 0, 0)
@@ -22,22 +31,80 @@ class Login(QDialog):
         layout.addWidget(self.username_text, 0, 1)
         layout.addWidget(self.password_text, 1, 1)
 
-        self.buttons = QDialogButtonBox(
-            QDialogButtonBox.Ok | QDialogButtonBox.Cancel,
-            Qt.Horizontal, self)
-        layout.addWidget(self.buttons, 2, 0, 3, 0)
-
-        self.buttons.accepted.connect(self.accept)
-        self.buttons.rejected.connect(self.reject)
+        layout.addWidget(buttons, 2, 0, 3, 0)
 
         self.setLayout(layout)
         self.setGeometry(400, 400, 200, 60)
 
     @staticmethod
     def getLoginInfo():
-        dialog = Login()
+        dialog = LoginDialog()
         result = dialog.exec_()
-        return (dialog.username_text.text(), dialog.password_text.text())
+        return dialog.username_text.text(), dialog.password_text.text(), result == QDialog.Accepted
+
+class ImportDialog(QDialog):
+    def __init__(self):
+        super().__init__()
+        self.setWindowFlags(self.windowFlags() ^ Qt.WindowContextHelpButtonHint)
+        self.setWindowModality(Qt.ApplicationModal)
+        self.setWindowTitle('Import usernames')
+        layout = QGridLayout()
+
+        self.file_label = QLabel('Filename')
+        self.file_text = QLineEdit()
+
+        buttons = QDialogButtonBox(
+            QDialogButtonBox.Ok | QDialogButtonBox.Cancel,
+            Qt.Horizontal, self)
+
+        buttons.accepted.connect(self.accept)
+        buttons.rejected.connect(self.reject)
+
+        layout.addWidget(self.file_label, 0, 0)
+        layout.addWidget(self.file_text, 0, 1)
+
+        layout.addWidget(buttons, 1, 0, 2, 0)
+
+        self.setLayout(layout)
+        self.setGeometry(400, 400, 200, 60)
+
+    @staticmethod
+    def getFileInfo():
+        dialog = ImportDialog()
+        result = dialog.exec_()
+        return dialog.file_text.text(), result == QDialog.Accepted
+
+class ExportDialog(QDialog):
+    def __init__(self):
+        super().__init__()
+        self.setWindowFlags(self.windowFlags() ^ Qt.WindowContextHelpButtonHint)
+        self.setWindowModality(Qt.ApplicationModal)
+        self.setWindowTitle('Export usernames')
+        layout = QGridLayout()
+
+        self.file_label = QLabel('Filename')
+        self.file_text = QLineEdit()
+
+        buttons = QDialogButtonBox(
+            QDialogButtonBox.Ok | QDialogButtonBox.Cancel,
+            Qt.Horizontal, self)
+
+        buttons.accepted.connect(self.accept)
+        buttons.rejected.connect(self.reject)
+
+        layout.addWidget(self.file_label, 0, 0)
+        layout.addWidget(self.file_text, 0, 1)
+
+        layout.addWidget(buttons, 1, 0, 2, 0)
+
+        self.setLayout(layout)
+        self.setGeometry(400, 400, 200, 60)
+
+    @staticmethod
+    def getFileInfo():
+        dialog = ExportDialog()
+        result = dialog.exec_()
+        return dialog.file_text.text(), result == QDialog.Accepted
 
 class Checker(QThread):
 
@@ -149,7 +216,7 @@ class App(QMainWindow):
         import_action.triggered.connect(self.import_usernames)
 
         export_action = QAction("Export Usernames", self)
-        export_action.triggered.connect(self.save_usernames)
+        export_action.triggered.connect(self.export_usernames)
 
         quit_action = QAction("Close", self)
         quit_action.triggered.connect(self.quit)
@@ -164,9 +231,6 @@ class App(QMainWindow):
         self.stop_button = QPushButton('Stop')
         self.stop_button.clicked.connect(self.stop_clicked)
 
-        self.save_button = QPushButton('Save')
-        self.save_button.clicked.connect(self.save_clicked)
-
         self.input_text = QTextEdit()
         self.output_text = QTextEdit()
 
@@ -176,9 +240,6 @@ class App(QMainWindow):
         output_label = QLabel('Available Usernames')
         output_label.setAlignment(Qt.AlignCenter)
 
-        self.save_entry = QLineEdit('Textfile.txt')
-        self.save_entry.setAlignment(Qt.AlignCenter)
-
         self.progress_bar = QProgressBar()
  
         #Add widgets to the window.
@@ -187,31 +248,23 @@ class App(QMainWindow):
         layout.addWidget(self.input_text, 1, 0)
         layout.addWidget(self.output_text, 1, 1)
         layout.addWidget(self.start_button, 2, 0)
-        layout.addWidget(self.save_entry, 2, 1)
-        layout.addWidget(self.stop_button, 3, 0)
-        layout.addWidget(self.save_button, 3, 1)
-        layout.addWidget(self.progress_bar, 4, 0, 5, 0)
+        layout.addWidget(self.stop_button, 2, 1)
+        layout.addWidget(self.progress_bar, 3, 0, 4, 0)
 		
     #When the start button is clicked, start the checker thread.
     def start_clicked(self):
-        login = Login()
-        igname, igpass = login.getLoginInfo()
-        usernames = get_usernames()
-        self.progress_bar.setMaximum(len(usernames))
-        self.output_text.setText('')
-        self.thread = Checker(igname, igpass)
-        self.thread.update.connect(self.update_text)
-        self.thread.pupdate.connect(self.update_progress)
-        self.thread.start()
-
-    # def start_thread(self, igname, igpass, loginbool):
-    #     usernames = get_usernames()
-    #     self.progress_bar.setMaximum(len(usernames))
-    #     self.output_text.setText('')
-    #     self.thread = Checker(self, igname, igpass, loginbool)
-    #     self.thread.update.connect(self.update_text)
-    #     self.thread.pupdate.connect(self.update_progress)
-    #     self.thread.start()
+        login = LoginDialog()
+        igname, igpass, result = login.getLoginInfo()
+        if result:
+            usernames = get_usernames()
+            self.progress_bar.setMaximum(len(usernames))
+            self.output_text.setText('')
+            self.thread = Checker(igname, igpass)
+            self.thread.update.connect(self.update_text)
+            self.thread.pupdate.connect(self.update_progress)
+            self.thread.start()
+        else:
+            pass
 
     #When the stop button is clicked, terminate the checker thread.
     def stop_clicked(self):
@@ -219,10 +272,6 @@ class App(QMainWindow):
             self.thread.terminate()
         except:
             pass
-
-    #When the save button is clicked, call the save_usernames function.
-    def save_clicked(self):
-        self.save_usernames()
  
     #When the checker thread emits a signal, update the output textbox.
     def update_text(self, text):
@@ -233,23 +282,33 @@ class App(QMainWindow):
         self.progress_bar.setValue(val)
 
     #Saves usernames from the output text.
-    def save_usernames(self):
-        proxies = self.output_text.toPlainText()
-        proxies = proxies.strip()
-        outputfile = self.save_entry.text()
-        with open(outputfile, "a") as a:
-            a.write(proxies)
+    def export_usernames(self):
+        exportDialog = ExportDialog()
+        filename, result = exportDialog.getFileInfo()
+        if result:
+            try:
+                proxies = self.output_text.toPlainText()
+                proxies = proxies.strip()
+                with open(filename, "w") as a:
+                    a.write(proxies)
+            except:
+                pass
+        else:
+            pass
 
     def import_usernames(self):
-        try:
-            text, ok = QInputDialog.getText(self, 'Import Usernames', 'Enter file name:')
-            with open(text, "r") as f:
-                out = f.read()
-            if ok:
-                self.input_text.setText(out)
-        except:
+        importDialog = ImportDialog()
+        filename, result = importDialog.getFileInfo()
+        if result:
+            try:
+                with open(filename, "r") as f:
+                    out = f.read()
+                    self.input_text.setText(out)
+            except:
+                pass
+        else:
             pass
-        
+
     def quit(self):
         sys.exit()
 
@@ -261,14 +320,6 @@ if __name__ == '__main__':
         proxies = proxies.strip()
         proxies = proxies.split('\n')
         return proxies
-
-    #Get Instagram username from the entry box.
-    def get_igname():
-        return window.name_entry.text()
-
-    #Get Instagram password from the entry box.
-    def get_igpass():
-        return window.pass_entry.text()
 
     app = QApplication(sys.argv)
     window = App()
