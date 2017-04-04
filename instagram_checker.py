@@ -47,7 +47,7 @@ class ImportDialog(QDialog):
         super().__init__()
         self.setWindowFlags(self.windowFlags() ^ Qt.WindowContextHelpButtonHint)
         self.setWindowModality(Qt.ApplicationModal)
-        self.setWindowTitle('Import usernames')
+        self.setWindowTitle('Import Usernames')
         layout = QGridLayout()
 
         self.file_label = QLabel('Filename')
@@ -79,7 +79,7 @@ class ExportDialog(QDialog):
         super().__init__()
         self.setWindowFlags(self.windowFlags() ^ Qt.WindowContextHelpButtonHint)
         self.setWindowModality(Qt.ApplicationModal)
-        self.setWindowTitle('Export usernames')
+        self.setWindowTitle('Export Usernames')
         layout = QGridLayout()
 
         self.file_label = QLabel('Filename')
