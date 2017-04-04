@@ -4,7 +4,7 @@ This program checks Instagram usernames without the official API filtering out b
 
 ## Usage
 
-![myimage-alt-tag](http://image.prntscr.com/image/1391c3bc1b674e0f8600a4a967e16145.png)
+![myimage-alt-tag](http://i.imgur.com/HgugLf1.png)
 
 ## License
 
