@@ -1,4 +1,4 @@
-import sys, aiohttp, asyncio
+import sys, aiohttp, asyncio, json
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 
@@ -152,10 +152,13 @@ class Checker(QThread):
         sem = asyncio.BoundedSemaphore(50)
         lock = asyncio.Lock()
         async with aiohttp.ClientSession() as session:
-            await self.login(self.igname, self.igpass, session)
-            usernames = get_usernames()
-            tasks = [self.check_usernames(username, sem, session, lock) for username in usernames]
-            await asyncio.gather(*tasks)
+            cont = await self.login(self.igname, self.igpass, session)
+            if cont:
+                usernames = get_usernames()
+                tasks = [self.check_usernames(username, sem, session, lock) for username in usernames]
+                await asyncio.gather(*tasks)
+            else:
+                pass
 
     #Logs into Instagram.
     async def login(self, username, password, session):
@@ -177,10 +180,12 @@ class Checker(QThread):
                 ) as response:
 
                 text = await response.json()
-                if 'authenticated' in text:
-                    pass
+
+                if text['authenticated']:
+                    return True
                 else:
-                    sys.exit(text)
+                    self.update.emit('Login Failed')
+                    return False
 
 class App(QMainWindow):
  
