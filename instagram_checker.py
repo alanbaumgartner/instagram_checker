@@ -152,13 +152,10 @@ class Checker(QThread):
         sem = asyncio.BoundedSemaphore(50)
         lock = asyncio.Lock()
         async with aiohttp.ClientSession() as session:
-            cont = await self.login(self.igname, self.igpass, session)
-            if cont:
-                usernames = get_usernames()
-                tasks = [self.check_usernames(username, sem, session, lock) for username in usernames]
-                await asyncio.gather(*tasks)
-            else:
-                pass
+            await self.login(self.igname, self.igpass, session)
+            usernames = get_usernames()
+            tasks = [self.check_usernames(username, sem, session, lock) for username in usernames]
+            await asyncio.gather(*tasks)
 
     #Logs into Instagram.
     async def login(self, username, password, session):
@@ -180,12 +177,10 @@ class Checker(QThread):
                 ) as response:
 
                 text = await response.json()
-                print(text)
-                if 'authenticated: True' in text:
-                    return True
+                if 'authenticated' in text:
+                    pass
                 else:
-                    self.update.emit('Failed Login')
-                    return False
+                    sys.exit(text)
 
 class App(QMainWindow):
  
