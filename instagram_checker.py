@@ -1,4 +1,4 @@
-import sys, aiohttp, asyncio, json
+import sys, aiohttp, asyncio
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 
@@ -291,10 +291,10 @@ class App(QMainWindow):
         filename, result = exportDialog.getFileInfo()
         if result:
             try:
-                proxies = self.output_text.toPlainText()
-                proxies = proxies.strip()
+                usernames = self.output_text.toPlainText()
+                usernames = usernames.strip()
                 with open(filename, "w") as a:
-                    a.write(proxies)
+                    a.write(usernames)
             except:
                 pass
         else:
@@ -320,10 +320,11 @@ if __name__ == '__main__':
 
     #Get usernames from the input textbox.
     def get_usernames():
-        proxies = window.input_text.toPlainText()
-        proxies = proxies.strip()
-        proxies = proxies.split('\n')
-        return proxies
+        usernames = window.input_text.toPlainText()
+        usernames = usernames.strip()
+        usernames = usernames.lower()
+        usernames = usernames.split('\n')
+        return usernames
 
     app = QApplication(sys.argv)
     window = App()
