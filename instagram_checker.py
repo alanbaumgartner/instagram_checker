@@ -165,7 +165,7 @@ class Checker(QThread):
         async with session.get(self.URL.format('')) as response:
             csrftoken = await response.text()
 
-        csrftoken = csrftoken.split('csrf_token": "')[1].split('"')[0]
+        csrftoken = csrftoken.split('csrf_token":"')[1].split('"')[0]
 
         async with session.post(
                 self.LOGIN_URL,
